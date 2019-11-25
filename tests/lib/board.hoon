@@ -126,9 +126,14 @@
           (~(maybe-move play b1) 1)
   ==
 ++  test-add-loc
-  %+  expect-eq
-    !>  [--1 --2]
-    !>  (~(add-loc play exp-game) [--0 --1] [--1 --1])
+  ;:  weld
+    %+  expect-eq
+      !>  [--1 --2]
+      !>  (~(add-loc play exp-game) [--0 --1] [--1 --1])
+    %+  expect-eq
+      !>  [-1 --0]
+      !>  (~(add-loc play exp-game) [--0 --1] [-1 -1])
+  ==
 ++  test-inv-dp
   %+  expect-eq
     !>  [--0 -1]
@@ -145,6 +150,28 @@
       !>  %.y
       !>  (~(past-edge play exp-game) [-1 --1]) 
   ==
+++  test-at-edge-in-dir
+  ;:  weld
+    %+  expect-eq
+      !>  %.y
+      !>  =+  b=(new-game:gm 4 4)
+        (~(at-edge-in-dir play b) [-1 --1] [--3 --3]) 
+    %+  expect-eq
+      !>  %.y
+      !>  =+  b=(new-game:gm 4 4)
+        (~(at-edge-in-dir play b) [--1 -1] [--3 --3]) 
+    %+  expect-eq
+      !>  %.y
+      !>  =+  b=(new-game:gm 4 4)
+        (~(at-edge-in-dir play b) [--1 --1] [--3 --3])
+  ==
+
+++  test-move-to-edge
+  ;:  weld
+    %+  expect-eq
+      !>  [--0 --0]
+      !>  (~(move-to-edge play exp-game) [--0 -1] [--0 --0])
+  ==
 ::
 ++  test-line-at-target
   ;:  weld
@@ -158,19 +185,21 @@
     %+  expect-eq
       !>  `(list [@s @s])`~[[--0 --0] [--1 --1] [--2 --2]]
       !>  =+  b=(new-game:gm 3 3)
-          (~(line-at-target play b) [--1 --1] [--0 --0])
+        (~(line-at-target play b) [--1 --1] [--0 --0])
     %+  expect-eq
       !>  `(list [@s @s])`~[[--0 --0] [--1 --1] [--2 --2]]
       !>  =+  b=(new-game:gm 3 3)
-          (~(line-at-target play b) [--1 --1] [--1 --1])
+        (~(line-at-target play b) [--1 --1] [--1 --1])
     %+  expect-eq
       !>  `(list [@s @s])`~[[--0 --1] [--1 --1] [--2 --1]]
       !>  =+  b=(new-game:gm 3 3)
-          (~(line-at-target play b) [--1 --1] [--1 --0])
-  %+  expect-eq
+        (~(line-at-target play b) [--1 --0] [--1 --1])
+    %+  expect-eq
       !>  `(list [@s @s])`~[[--0 --1] [--1 --1] [--2 --1]]
       !>  =+  b=(new-game:gm 3 3)
-          (~(line-at-target play b) [--2 --1] [--1 --0])
+        (~(line-at-target play b) [--1 --0] [--2 --1])
+
+
   ==
 ::
 ++  test-suple-and-unsuple
@@ -186,42 +215,41 @@
 ++  test-max-in-line
   ;:  weld
     %+  expect-eq
-      !>  `(list [@s @s])`~[[--0 --1] [--1 --1] [--2 --1]]
+      !>  `(list [@s @s])`~[[--3 --2] [--3 --1] [--3 --0]]
       !>  =+  b=(new-game:gm 4 4)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
-          =+  l=(~(line-at-target play b) [--2 --1] [--0 --1])
+          =+  l=(~(line-at-target play b) [--0 --1] [--3 --1])
           (~(max-in-line play b) %a l)
     %+  expect-eq
-      !>  `(list [@s @s])`~[[--2 --1] [--3 --1]]
+      !>  `(list [@s @s])`~[[--3 --3] [--3 --2]]
       !>  =+  b=(new-game:gm 4 4)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
-          =+  l=(~(line-at-target play b) [--2 --1] [--0 --1])
+          =.  b  (~(move play b) 3) :: a
+          =.  b  (~(move play b) 3) :: b
+          =.  b  (~(move play b) 3) :: a
+          =.  b  (~(move play b) 2) :: b
+          =.  b  (~(move play b) 3) :: a
+          =.  b  (~(move play b) 2) :: b
+          =+  l=(~(line-at-target play b) [--0 --1] [--3 --1])
           (~(max-in-line play b) %a l)
   ==
 ::
 ++  test-caused-win-in-dir
   ;:  weld
     %+  expect-eq
-      !>  `(list [@s @s])`~[[--0 --1] [--1 --1] [--2 --1]]
+      !>  (some `(list [@s @s])`~[[--3 --2] [--3 --1] [--3 --0]])
       !>  =+  b=(new-game:gm 4 4)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
-          =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
-          (~(caused-win-in-dir play b) 3 [--2 --1] [--0 --1])
+          =.  b  (~(move play b) 3) :: a
+          =.  b  (~(move play b) 2) :: b
+          =.  b  (~(move play b) 3) :: a
+          =.  b  (~(move play b) 2) :: b
+          =.  b  (~(move play b) 3) :: a
+          (~(caused-win-in-dir play b) 3 [--3 --1] [--0 --1])
     %+  expect-eq
-      !>  (some `(list [@s @s])`~[[--1 --1] [--2 --1] [--3 --1]])
+      !>  (some `(list [@s @s])`~[[--3 --3] [--3 --2] [--3 --1]])
       !>  =+  b=(new-game:gm 4 4)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
@@ -231,23 +259,24 @@
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
           (~(caused-win-in-dir play b) 3 [--3 --1] [--0 --1])
   ==
 ::
 ++  test-caused-win
   ;:  weld
     %+  expect-eq
-      !>  `(list [@s @s])`~[[--0 --1] [--1 --1] [--2 --1]]
+      !>  (some `(list [@ @])`~[[3 3] [3 2] [3 1] [3 0]])
       !>  =+  b=(new-game:gm 4 4)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
-          (~(caused-win play b) [2 1])
+          =.  b  (~(move play b) 2)
+          =.  b  (~(move play b) 3)
+          (~(caused-win play b) [3 3])
     %+  expect-eq
-      !>  (some `(list [@s @s])`~[[--1 --1] [--2 --1] [--3 --1]])
+      !>  ~ 
       !>  =+  b=(new-game:gm 4 4)
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
@@ -257,7 +286,6 @@
           =.  b  (~(move play b) 2)
           =.  b  (~(move play b) 3)
           =.  b  (~(move play b) 2)
-          =.  b  (~(move play b) 3)
-          (~(caused-win play b) [3 1])
+          (~(caused-win play b) [3 3])
   ==
 --

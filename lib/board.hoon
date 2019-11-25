@@ -99,18 +99,18 @@
     ::
     |=  [dp=[@s @s] loc=[@s @s]]
     ^-  [@s @s]
-    [(add +2.dp +2.loc) (add +3.dp +3.loc)]
+    [(sum:si -.dp -.loc) (sum:si +.dp +.loc)]
   ::
   ++  past-edge
-    ::  checks if a location is psased the edge of the
+    ::  checks if a location is past the edge of the
     ::  board in any direction
     ::
     |=  [loc=[@s @s]]
     ^-  _|
     ?|  =((cmp:si +.loc --0) -1)
         =((cmp:si -.loc --0) -1)
-        =((cmp:si +.loc x.size.g) --1)
-        =((cmp:si -.loc y.size.g) --1)
+        =((cmp:si -.loc (new:si & (dec x.size.g))) --1)
+        =((cmp:si +.loc (new:si & (dec y.size.g))) --1)
     ==
   ::
   ++  at-edge-in-dir
@@ -126,6 +126,7 @@
     ::
     |=  [dp=[@s @s] target=[@s @s]]
     ^-  [@s @s]
+
     ?:  (at-edge-in-dir dp target)
       target
     $(target (add-loc target dp))
@@ -144,13 +145,13 @@
     ::
     |=  [dp=[@s @s] target=[@s @s]]
     ^-  (list [@s @s])
-    =/  line-start=[@s @s]   (move-to-edge dp target)
     =/  inv=[@s @s]          (inv-dp dp)
-    =/  cur-loc=[@s @s]      (add-loc line-start inv)
+    =/  line-start=[@s @s]   (move-to-edge inv target)
+    =/  cur-loc=[@s @s]      (add-loc line-start dp)
     =/  path=(list [@s @s])  ~[cur-loc line-start]
     |-  ^-  (list [@s @s])
-    ?:  (at-edge-in-dir dp cur-loc)  path
-    =/  new-loc=[@s @s]      (add-loc cur-loc inv)
+    ?:  (at-edge-in-dir dp cur-loc)  (flop path)
+    =/  new-loc=[@s @s]      (add-loc cur-loc dp)
     %=  $
       cur-loc              new-loc
       path                 [new-loc path]
@@ -173,7 +174,7 @@
     ^-  s=[m=(list [@s @s]) c=(list [@s @s])]
     %+  roll  line
       |=  [here=[x=@s y=@s] s=[m=(list [@s @s]) c=(list [@s @s])]]
-      =+  player-here=(~(got by b.g) here)
+      =+  player-here=(~(got by b.g) (unsuple here))
       ?:  =(player-here for)
         =+  c=[here c.s]
         %_  s
@@ -198,12 +199,12 @@
     ::  Search downward for a path that is of
     ::  length ts or better
     ::
-    |=  [tc=@ target=[x=@s y=@s] dp=[@s @s]]
+    |=  [tc=@ target=[@s @s] dp=[@s @s]]
     ^-  (unit (list [@s @s]))
-    =+  player-here=(~(got by b.g) target)
+    =+  player-here=(~(got by b.g) (unsuple target))
     =+  line=(line-at-target dp target)
     =+  max-line=(max-in-line player-here line)
-    ?:  (gte tc (lent max-line)) 
+    ?:  (lte tc (lent max-line)) 
       (some max-line)
     ~
   ::
@@ -227,6 +228,8 @@
         ^-  (unit (list [@s @s]))
         =/  nt=[@s @s]  (suple t) 
         ?~  win
+          ?:  &((at-edge-in-dir dir nt) (at-edge-in-dir (inv-dp dir) nt))
+            ~
           (caused-win-in-dir 4 nt dir)
         win
     %+  bind  ws
