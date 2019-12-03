@@ -1,4 +1,13 @@
 |%
++$  action
+  $%  $:  %new-game
+          x=@
+          y=@
+      ==
+      $:  %play-move
+          s=@
+      ==
+  ==
 +$  state       ?($a $b $empty)
 +$  cord        [x=@ y=@]
 +$  size        [x=@ y=@]
